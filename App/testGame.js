@@ -182,11 +182,12 @@ var TestGame = React.createClass({
       // this.refs['button' + index].setNativeProps({style:{backgroundColor:MAIN_COLOR}});
       // this.state.userSelected = userSelected;
     } else {
-      Alert.alert('提示','选择的数字不相邻');
+      Alert.alert('Warning','you should select adjacent number');
     }
 
     if (this.state.totalValue === this.state.targetNumber) {
-      Alert.alert('提示','成功');
+
+      Alert.alert('Message','Not bad, man!');
       this.setState({round: this.state.round + 1});
       setTimeout(() => {
         this.resetGame();
