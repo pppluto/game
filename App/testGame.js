@@ -10,104 +10,10 @@ var {
   TouchableOpacity,
   TouchableOpacity
 } = ReactNative;
+var Game = require('./game');
 var SCREEN_WIDTH = Dimensions.get('window').width;
 var SCREEN_HEIGHT = Dimensions.get('window').height;
 var MAIN_COLOR = 'rgb(73,185,251)';
-var TOTAL_PIECE = 16; // should be A Perfect Square number
-
-//生成一组参考答案数组。
-function createAnswerSequence(a,c){
-  var target = parseInt(a || 0, 10);
-  var count = parseInt(c || 2, 10);
-  if (typeof target !== 'number' || typeof target !== 'number') {
-    throw new Error('parameters should be a NUMBER ');
-  }
-  if (target < 5) {
-    throw new Error('target should beyond 5');
-  }
-
-  var randomPositions = [], i = 0;
-  while (i < count) {
-    var tmp = Math.floor(Math.random() * target);
-    if (randomPositions.indexOf(tmp) < 0 && tmp !== 0) {
-      randomPositions.push(tmp);
-      ++i;
-    }
-  }
-  var sortRandomPositions = randomPositions.sort((_a,_b) => _a - _b);
-  var targetAnswers = [];
-  sortRandomPositions.reduce((p,n) => {
-    targetAnswers.push(n - p);
-    return n;
-  },0);
-  targetAnswers.push(target - sortRandomPositions[sortRandomPositions.length - 1]);
-  return targetAnswers;
-}
-
-function createAllPieceValue(target) {
-  var i = 0, arr = [];
-  while (i < TOTAL_PIECE) {
-    var tmp = Math.floor(Math.random() * 10);
-    if (tmp === target) {
-      continue;
-    }
-    arr.push(tmp);
-    ++i;
-  }
-  return arr;
-}
-
-function isNearBy(center,b,rowLength) {
-
-  var minus = Math.abs(center - b);
-  if (minus !== 1 && minus !== 4 && minus !== 0) {
-    return false;
-  }
-
-  if (center % rowLength === 0 && b === (center - 1)) {
-    return false;
-  }
-
-  if (center % rowLength === (rowLength - 1) && b === (center + 1)) {
-    return false;
-  }
-
-  return true;
-}
-
-function getAvailableIndexes(index, rowLength) {
-  var allIndexes = [index - rowLength, index + rowLength, index - 1, index + 1];
-  var availableIndexes = [];
-  allIndexes.forEach( value => {
-    if (value >= 0 && value <= (rowLength * rowLength - 1)) {
-      if (isNearBy(index, value,rowLength)) {
-        availableIndexes.push(value);
-      }
-    }
-  });
-  return availableIndexes;
-}
-
-function createAnswerIndexes(count){
-  var indexesArray = [];
-  var rowLength = Math.sqrt(TOTAL_PIECE);
-
-  var initialPosition = Math.floor(Math.random() * TOTAL_PIECE);
-
-
-  var i = 0;
-  var availableIndexes = getAvailableIndexes(initialPosition,rowLength);
-  while (i < count) {
-
-    if (indexesArray.indexOf(initialPosition) < 0) {
-      indexesArray.push(initialPosition);
-      availableIndexes = getAvailableIndexes(initialPosition,rowLength);
-      ++i;
-    }
-    initialPosition = availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
-  }
-  return indexesArray;
-}
 
 var TestGame = React.createClass({
 
@@ -137,9 +43,9 @@ var TestGame = React.createClass({
   resetGame: function() {
     var targetNumber = Math.floor(Math.random() * (10 + this.state.round * 2)) + 6;
     var count = this.state.round < 3 ? 1 : (this.state.round < 6 ? 2 : 3);
-    var answerSequence = createAnswerSequence(targetNumber,count);
-    var answerIndexes = createAnswerIndexes(answerSequence.length);
-    var allPieceValue = createAllPieceValue(targetNumber);
+    var answerSequence = Game.createAnswerSequence(targetNumber,count);
+    var answerIndexes = Game.createAnswerIndexes(answerSequence.length);
+    var allPieceValue = Game.createAllPieceValue(targetNumber);
 
     answerIndexes.forEach( (index,i_index) => {
       allPieceValue[index] = answerSequence[i_index];
@@ -155,15 +61,13 @@ var TestGame = React.createClass({
   },
 
   clearGame: function() {
-    if (this.state.isOver) {
-      return;
-    }
-    // this.setState({userSelected: [],totalValue:0});
     this.state.userSelected.forEach( v => {
       this.refs['button' + v].setNativeProps({style:{backgroundColor:'white'}});
     });
     this.state.userSelected = [];
     this.state.totalValue = 0;
+    this.setState({isOver:false});
+    // this.setState({userSelected: [],totalValue:0});
   },
 
   showAnswer: function() {
