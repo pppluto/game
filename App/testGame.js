@@ -60,7 +60,7 @@ function createAllPieceValue(target) {
 function isNearBy(center,b,rowLength) {
 
   var minus = Math.abs(center - b);
-  if (minus > 1 && minus < 4) {
+  if (minus !== 1 && minus !== 4 && minus !== 0) {
     return false;
   }
 
@@ -158,7 +158,12 @@ var TestGame = React.createClass({
     if (this.state.isOver) {
       return;
     }
-    this.setState({userSelected: [],totalValue:0});
+    // this.setState({userSelected: [],totalValue:0});
+    this.state.userSelected.forEach( v => {
+      this.refs['button' + v].setNativeProps({style:{backgroundColor:'white'}});
+    });
+    this.state.userSelected = [];
+    this.state.totalValue = 0;
   },
 
   showAnswer: function() {
@@ -178,9 +183,9 @@ var TestGame = React.createClass({
     if (isNearBy(centerIndex,index,4)) {
       userSelected.push(index);
       this.state.totalValue = this.state.totalValue + this.state.allPieceValue[index];
-      this.setState({userSelected});
-      // this.refs['button' + index].setNativeProps({style:{backgroundColor:MAIN_COLOR}});
-      // this.state.userSelected = userSelected;
+      // this.setState({userSelected});
+      this.refs['button' + index].setNativeProps({style:{backgroundColor:MAIN_COLOR}});
+      this.state.userSelected = userSelected;
     } else {
       Alert.alert('Warning','you should select adjacent number');
     }
@@ -191,7 +196,7 @@ var TestGame = React.createClass({
       this.setState({round: this.state.round + 1});
       setTimeout(() => {
         this.resetGame();
-      }, 2000);
+      }, 1000);
     }
   },
 
