@@ -10,7 +10,7 @@ var {
   TouchableOpacity,
   TouchableOpacity
 } = ReactNative;
-var Game = require('./game');
+var Game = require('./Game');
 var SCREEN_WIDTH = Dimensions.get('window').width;
 var SCREEN_HEIGHT = Dimensions.get('window').height;
 var MAIN_COLOR = 'rgb(73,185,251)';
@@ -71,6 +71,7 @@ var TestGame = React.createClass({
   },
 
   showAnswer: function() {
+    this.clearGame();
     this.setState({isOver:true});
   },
 
@@ -84,7 +85,7 @@ var TestGame = React.createClass({
     }
     var userSelected = this.state.userSelected;
     var centerIndex = userSelected.length ? userSelected[userSelected.length - 1] : index;
-    if (isNearBy(centerIndex,index,4)) {
+    if (Game.isNearBy(centerIndex,index,4)) {
       userSelected.push(index);
       this.state.totalValue = this.state.totalValue + this.state.allPieceValue[index];
       // this.setState({userSelected});
@@ -112,27 +113,29 @@ var TestGame = React.createClass({
           <Text style={{fontSize:20,alignSelf:'center',color:'white'}}>{'Target Number: ' + this.state.targetNumber}</Text>
         </View>
         <View style={{flexDirection:'row',justifyContent:'space-around',marginVertical: 15}}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={this.resetGame}>
-            <View style={styles.button}>
-              <Text style={{color:'white'}}>Reset</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={this.clearGame}>
-            <View style={styles.button}>
-              <Text style={{color:'white'}}>Clear</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={this.showAnswer}>
-            <View style={styles.button}>
-              <Text style={{color:'white'}}>Show</Text>
-            </View>
-          </TouchableOpacity>
+          {Array.from({length:3}, v => v).map( (value, index) => {
+            var text = ['Reset', 'Clear', 'Show'][index];
+            return (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  switch (index) {
+                    case 0:
+                      return this.resetGame();
+                    case 1:
+                      return this.clearGame();
+                    case 2:
+                      return this.showAnswer();
+                    default:
+                      return;
+                  }
+                }}>
+                <View style={styles.button}>
+                  <Text style={{color:'white'}}>{text}</Text>
+                </View>
+              </TouchableOpacity>
+            )
+          })}
         </View>
         <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Rounds: ' + this.state.round}</Text>
         <View style={{width:SCREEN_WIDTH,flexWrap:'wrap',flexDirection:'row'}}>
@@ -143,16 +146,15 @@ var TestGame = React.createClass({
               <View
                 key={index}
                 ref={'button' + index}
-                style={{borderColor:'rgb(100,100,150)',borderWidth:1,width:SCREEN_WIDTH / 4,height:SCREEN_WIDTH / 4,backgroundColor:color}}>
+                style={[styles.rect,{backgroundColor:color}]}>
                 <TouchableOpacity
                   key={index}
                   activeOpacity={0.7}
-                  style={{width:SCREEN_WIDTH / 4 - 2,height:SCREEN_WIDTH / 4 - 2,justifyContent:'center'}}
+                  style={styles.innerRect}
                   onPress={this.onButtonClick.bind(this,index)}>
                   <Text style={{color:'grey',fontSize:20,alignSelf:'center'}}>{this.state.allPieceValue[index] || 0}</Text>
                 </TouchableOpacity>
               </View>
-
             );
           })}
         </View>
@@ -169,6 +171,17 @@ const styles = StyleSheet.create({
     backgroundColor: MAIN_COLOR,
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  rect: {
+    borderColor: 'rgb(100,100,150)',
+    borderWidth: 1,
+    width: SCREEN_WIDTH / 4,
+    height: SCREEN_WIDTH / 4,
+  },
+  innerRect: {
+    width: SCREEN_WIDTH / 4 - 4,
+    height: SCREEN_WIDTH / 4 - 4,
+    justifyContent: 'center',
   },
 });
 
