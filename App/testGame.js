@@ -6,6 +6,7 @@ var {
   Alert,
   StyleSheet,
   Dimensions,
+  StatusBar,
   TouchableOpacity,
   TouchableOpacity
 } = ReactNative;
@@ -95,12 +96,14 @@ function createAnswerIndexes(count){
 
 
   var i = 0;
+  var availableIndexes = getAvailableIndexes(initialPosition,rowLength);
   while (i < count) {
+
     if (indexesArray.indexOf(initialPosition) < 0) {
       indexesArray.push(initialPosition);
+      availableIndexes = getAvailableIndexes(initialPosition,rowLength);
       ++i;
     }
-    var availableIndexes =  getAvailableIndexes(initialPosition,rowLength);
     initialPosition = availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
   }
   return indexesArray;
@@ -176,24 +179,29 @@ var TestGame = React.createClass({
       userSelected.push(index);
       this.state.totalValue = this.state.totalValue + this.state.allPieceValue[index];
       this.setState({userSelected});
+      // this.refs['button' + index].setNativeProps({style:{backgroundColor:MAIN_COLOR}});
+      // this.state.userSelected = userSelected;
     } else {
-      Alert.alert('选择的数字不相邻');
+      Alert.alert('提示','选择的数字不相邻');
     }
 
     if (this.state.totalValue === this.state.targetNumber) {
-      Alert.alert('成功');
+      Alert.alert('提示','成功');
       this.setState({round: this.state.round + 1});
-      this.resetGame();
+      setTimeout(() => {
+        this.resetGame();
+      }, 2000);
     }
   },
 
   render: function() {
     return (
-      <View style={{flex:1,justifyContent:'center',width:SCREEN_WIDTH,height:SCREEN_HEIGHT}}>
-        <View style={{width:SCREEN_WIDTH,height: 64, justifyContent:'center',backgroundColor:MAIN_COLOR}}>
-          <Text style={{marginTop:20,fontSize:20,alignSelf:'center',color:'white'}}>{'Target Number: ' + this.state.targetNumber}</Text>
+      <View style={{flex:1,width:SCREEN_WIDTH,height:SCREEN_HEIGHT}}>
+        <StatusBar backgroundColor="blue" barStyle="light-content" />
+        <View style={{width:SCREEN_WIDTH,height: 50, justifyContent:'center',backgroundColor:MAIN_COLOR}}>
+          <Text style={{fontSize:20,alignSelf:'center',color:'white'}}>{'Target Number: ' + this.state.targetNumber}</Text>
         </View>
-        <View style={{flex:1,flexDirection:'row',justifyContent:'space-around',marginVertical: 15}}>
+        <View style={{flexDirection:'row',justifyContent:'space-around',marginVertical: 15}}>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={this.resetGame}>
@@ -216,19 +224,25 @@ var TestGame = React.createClass({
             </View>
           </TouchableOpacity>
         </View>
-        <Text style={{marginBottom:30,fontSize:20,alignSelf:'center'}}>{'Rounds: ' + this.state.round}</Text>
+        <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Rounds: ' + this.state.round}</Text>
         <View style={{width:SCREEN_WIDTH,flexWrap:'wrap',flexDirection:'row'}}>
           {Array.from({length:16},(k,v) => {return v;}).map( (v, index) => {
             var highlightIndexes = this.state.isOver ? this.state.answerIndexes : this.state.userSelected;
             var color = highlightIndexes.indexOf(index) >= 0 ? MAIN_COLOR : 'white';
             return (
-              <TouchableOpacity
+              <View
                 key={index}
-                activeOpacity={0.7}
-                onPress={this.onButtonClick.bind(this,index)}
-                style={{borderColor:'rgb(100,100,150)',borderWidth:1,width:SCREEN_WIDTH / 4,height:SCREEN_WIDTH / 4,backgroundColor:color,justifyContent:'center'}}>
-                <Text style={{color:'grey',fontSize:20,alignSelf:'center'}}>{this.state.allPieceValue[index] || 0}</Text>
-              </TouchableOpacity>
+                ref={'button' + index}
+                style={{borderColor:'rgb(100,100,150)',borderWidth:1,width:SCREEN_WIDTH / 4,height:SCREEN_WIDTH / 4,backgroundColor:color}}>
+                <TouchableOpacity
+                  key={index}
+                  activeOpacity={0.7}
+                  style={{width:SCREEN_WIDTH / 4 - 2,height:SCREEN_WIDTH / 4 - 2,justifyContent:'center'}}
+                  onPress={this.onButtonClick.bind(this,index)}>
+                  <Text style={{color:'grey',fontSize:20,alignSelf:'center'}}>{this.state.allPieceValue[index] || 0}</Text>
+                </TouchableOpacity>
+              </View>
+
             );
           })}
         </View>
