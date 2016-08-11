@@ -42,9 +42,10 @@ var TestGame = React.createClass({
   },
 
   resetGame: function() {
-    var targetNumber = Math.floor(Math.random() * (10 + this.state.round * 2)) + 6 + this.state.round;
+    var base = [10,15,20][this.state.currentLevel - 1];
+    var targetNumber = Math.floor(Math.random() * base) + base;
     this.state.totalPieces = Math.pow(this.state.currentLevel + 3,2);
-    var count = this.state.currentLevel + Math.floor(this.state.round / 6);
+    var count = this.state.currentLevel + Math.floor(this.state.round / 3);
     var game = new Game();
     game.totalPieces = this.state.totalPieces;
     var answerSequence = game.createAnswerSequence(targetNumber,count);
@@ -65,18 +66,36 @@ var TestGame = React.createClass({
   },
 
   clearGame: function() {
-    this.state.userSelected.forEach( v => {
+    if (this.state.userSelected.length) {
+      this.state.userSelected.forEach( v => {
+        this.refs['button' + v].setNativeProps({style:{backgroundColor:'white'}});
+      });
+    }
+
+    this.state.answerIndexes.forEach( v => {
       this.refs['button' + v].setNativeProps({style:{backgroundColor:'white'}});
     });
     this.state.userSelected = [];
     this.state.totalValue = 0;
-    this.setState({isOver:false});
+    // this.setState({isOver:false});
     // this.setState({userSelected: [],totalValue:0});
   },
 
   showAnswer: function() {
-    this.clearGame();
+    if (this.state.isOver) {
+      return;
+    }
+
+    if (this.state.userSelected.length) {
+      this.state.userSelected.forEach( v => {
+        this.refs['button' + v].setNativeProps({style:{backgroundColor:'white'}});
+      });
+    }
+
     this.setState({isOver:true});
+    this.state.answerIndexes.forEach( v => {
+      this.refs['button' + v].setNativeProps({style:{backgroundColor:MAIN_COLOR}});
+    });
   },
 
   onButtonClick: function(index) {
@@ -105,10 +124,10 @@ var TestGame = React.createClass({
       var round = this.state.round;
       var currentLevel = this.state.currentLevel;
       round += 1;
-      if (this.state.round >= 10) {
+      if (round > 5) {
         round = 1;
         currentLevel += 1;
-        if (this.state.currentLevel > 3) {
+        if (currentLevel > 3) {
           //game finish
           Alert.alert('Message','You Win!');
           round = 1;
@@ -155,17 +174,20 @@ var TestGame = React.createClass({
             )
           })}
         </View>
-        <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Rounds: ' + this.state.round}</Text>
+        <View style={{flexDirection:'row',justifyContent:'space-around'}}>
+          <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Round: ' + this.state.round}</Text>
+          <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Level: ' + this.state.currentLevel}</Text>
+        </View>
         <View style={{width:SCREEN_WIDTH,flexWrap:'wrap',flexDirection:'row'}}>
           {Array.from({length:this.state.totalPieces},(k,v) => {return v;}).map( (v, index) => {
-            var highlightIndexes = this.state.isOver ? this.state.answerIndexes : this.state.userSelected;
-            var color = highlightIndexes.indexOf(index) >= 0 ? MAIN_COLOR : 'white';
+            // var highlightIndexes = this.state.isOver ? this.state.answerIndexes : this.state.userSelected;
+            // var color = highlightIndexes.indexOf(index) >= 0 ? MAIN_COLOR : 'white';
             return (
               <View
                 key={index}
                 ref={'button' + index}
                 style={[styles.rect,{
-                  backgroundColor:color,
+                  // backgroundColor:color,
                   width: SCREEN_WIDTH / Math.sqrt(this.state.totalPieces),
                   height: SCREEN_WIDTH / Math.sqrt(this.state.totalPieces)
                 }]}>
