@@ -14,7 +14,6 @@ var Game = require('./Game');
 var SCREEN_WIDTH = Dimensions.get('window').width;
 var SCREEN_HEIGHT = Dimensions.get('window').height;
 var MAIN_COLOR = 'rgb(73,185,251)';
-
 var TestGame = React.createClass({
 
   statics:{
@@ -32,7 +31,9 @@ var TestGame = React.createClass({
       answerIndexes: [],
       userSelected: [],
       isOver: false,
-      round: 0,
+      round: 1,
+      currentLevel: 1,
+      totalPieces: 16,
     };
   },
 
@@ -41,11 +42,14 @@ var TestGame = React.createClass({
   },
 
   resetGame: function() {
-    var targetNumber = Math.floor(Math.random() * (10 + this.state.round * 2)) + 6;
-    var count = this.state.round < 3 ? 1 : (this.state.round < 6 ? 2 : 3);
-    var answerSequence = Game.createAnswerSequence(targetNumber,count);
-    var answerIndexes = Game.createAnswerIndexes(answerSequence.length);
-    var allPieceValue = Game.createAllPieceValue(targetNumber);
+    var targetNumber = Math.floor(Math.random() * (10 + this.state.round * 2)) + 6 + this.state.round;
+    this.state.totalPieces = Math.pow(this.state.currentLevel + 3,2);
+    var count = this.state.currentLevel + Math.floor(this.state.round / 6);
+    var game = new Game();
+    game.totalPieces = this.state.totalPieces;
+    var answerSequence = game.createAnswerSequence(targetNumber,count);
+    var answerIndexes = game.createAnswerIndexes(answerSequence.length);
+    var allPieceValue = game.createAllPieceValue(targetNumber);
 
     answerIndexes.forEach( (index,i_index) => {
       allPieceValue[index] = answerSequence[i_index];
@@ -85,7 +89,7 @@ var TestGame = React.createClass({
     }
     var userSelected = this.state.userSelected;
     var centerIndex = userSelected.length ? userSelected[userSelected.length - 1] : index;
-    if (Game.isNearBy(centerIndex,index,4)) {
+    if (new Game().isNearBy(centerIndex,index,Math.sqrt(this.state.totalPieces))) {
       userSelected.push(index);
       this.state.totalValue = this.state.totalValue + this.state.allPieceValue[index];
       // this.setState({userSelected});
@@ -98,7 +102,20 @@ var TestGame = React.createClass({
     if (this.state.totalValue === this.state.targetNumber) {
 
       Alert.alert('Message','Not bad, man!');
-      this.setState({round: this.state.round + 1});
+      var round = this.state.round;
+      var currentLevel = this.state.currentLevel;
+      round += 1;
+      if (this.state.round >= 10) {
+        round = 1;
+        currentLevel += 1;
+        if (this.state.currentLevel > 3) {
+          //game finish
+          Alert.alert('Message','You Win!');
+          round = 1;
+          currentLevel = 1;
+        }
+      }
+      this.setState({round,currentLevel});
       setTimeout(() => {
         this.resetGame();
       }, 1000);
@@ -117,6 +134,7 @@ var TestGame = React.createClass({
             var text = ['Reset', 'Clear', 'Show'][index];
             return (
               <TouchableOpacity
+                key={index + 'value'}
                 activeOpacity={0.7}
                 onPress={() => {
                   switch (index) {
@@ -139,18 +157,24 @@ var TestGame = React.createClass({
         </View>
         <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Rounds: ' + this.state.round}</Text>
         <View style={{width:SCREEN_WIDTH,flexWrap:'wrap',flexDirection:'row'}}>
-          {Array.from({length:16},(k,v) => {return v;}).map( (v, index) => {
+          {Array.from({length:this.state.totalPieces},(k,v) => {return v;}).map( (v, index) => {
             var highlightIndexes = this.state.isOver ? this.state.answerIndexes : this.state.userSelected;
             var color = highlightIndexes.indexOf(index) >= 0 ? MAIN_COLOR : 'white';
             return (
               <View
                 key={index}
                 ref={'button' + index}
-                style={[styles.rect,{backgroundColor:color}]}>
+                style={[styles.rect,{
+                  backgroundColor:color,
+                  width: SCREEN_WIDTH / Math.sqrt(this.state.totalPieces),
+                  height: SCREEN_WIDTH / Math.sqrt(this.state.totalPieces)
+                }]}>
                 <TouchableOpacity
-                  key={index}
                   activeOpacity={0.7}
-                  style={styles.innerRect}
+                  style={[styles.innerRect,{
+                    width: SCREEN_WIDTH / Math.sqrt(this.state.totalPieces) - 4,
+                    height: SCREEN_WIDTH / Math.sqrt(this.state.totalPieces) - 4,
+                  }]}
                   onPress={this.onButtonClick.bind(this,index)}>
                   <Text style={{color:'grey',fontSize:20,alignSelf:'center'}}>{this.state.allPieceValue[index] || 0}</Text>
                 </TouchableOpacity>
@@ -175,12 +199,10 @@ const styles = StyleSheet.create({
   rect: {
     borderColor: 'rgb(100,100,150)',
     borderWidth: 1,
-    width: SCREEN_WIDTH / 4,
-    height: SCREEN_WIDTH / 4,
+
   },
   innerRect: {
-    width: SCREEN_WIDTH / 4 - 4,
-    height: SCREEN_WIDTH / 4 - 4,
+
     justifyContent: 'center',
   },
 });

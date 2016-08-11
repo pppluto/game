@@ -1,7 +1,13 @@
-var TOTAL_PIECE = 16; // should be A Perfect Square number
+// var TOTAL_PIECE = 16; // should be A Perfect Square number
 
 //生成一组参考答案数组。
-exports.createAnswerSequence = function(a,c){
+function Game(){
+  this.totalPieces = 16;
+}
+
+module.exports = Game;
+
+Game.prototype.createAnswerSequence = function(a,c){
   var target = parseInt(a || 0, 10);
   var count = parseInt(c || 2, 10);
   if (typeof target !== 'number' || typeof target !== 'number') {
@@ -29,10 +35,11 @@ exports.createAnswerSequence = function(a,c){
   return targetAnswers;
 }
 
-exports.createAllPieceValue = function(target) {
+Game.prototype.createAllPieceValue = function(target,totalPieces) {
+
   var i = 0, arr = [];
-  while (i < TOTAL_PIECE) {
-    var tmp = Math.floor(Math.random() * 10);
+  while (i < this.totalPieces) {
+    var tmp = Math.floor(Math.random() * 20);
     if (tmp === target) {
       continue;
     }
@@ -45,7 +52,7 @@ exports.createAllPieceValue = function(target) {
 function isNearBy(center,b,rowLength) {
 
   var minus = Math.abs(center - b);
-  if (minus !== 1 && minus !== 4 && minus !== 0) {
+  if (minus !== 1 && minus !== rowLength && minus !== 0) {
     return false;
   }
 
@@ -60,13 +67,13 @@ function isNearBy(center,b,rowLength) {
   return true;
 }
 
-exports.isNearBy = isNearBy;
+Game.prototype.isNearBy = isNearBy;
 
 function getAvailableIndexes(index, rowLength) {
   var allIndexes = [index - rowLength, index + rowLength, index - 1, index + 1];
   var availableIndexes = [];
   allIndexes.forEach( value => {
-    if (value >= 0 && value <= (rowLength * rowLength - 1)) {
+    if (value >= 0 && value < rowLength * rowLength) {
       if (isNearBy(index, value,rowLength)) {
         availableIndexes.push(value);
       }
@@ -75,11 +82,11 @@ function getAvailableIndexes(index, rowLength) {
   return availableIndexes;
 }
 
-exports.createAnswerIndexes = function(count){
+Game.prototype.createAnswerIndexes = function(count){
   var indexesArray = [];
-  var rowLength = Math.sqrt(TOTAL_PIECE);
+  var rowLength = Math.sqrt(this.totalPieces);
 
-  var initialPosition = Math.floor(Math.random() * TOTAL_PIECE);
+  var initialPosition = Math.floor(Math.random() * this.totalPieces);
 
 
   var i = 0;
