@@ -77,7 +77,7 @@ var TestGame = React.createClass({
     });
     this.state.userSelected = [];
     this.state.totalValue = 0;
-    // this.setState({isOver:false});
+    this.setState({isOver:false});
     // this.setState({userSelected: [],totalValue:0});
   },
 
@@ -136,6 +136,7 @@ var TestGame = React.createClass({
       }
       this.setState({round,currentLevel});
       setTimeout(() => {
+        this.clearGame();
         this.resetGame();
       }, 1000);
     }
@@ -143,12 +144,18 @@ var TestGame = React.createClass({
 
   render: function() {
     return (
-      <View style={{flex:1,width:SCREEN_WIDTH,height:SCREEN_HEIGHT}}>
+      <View style={{position:'absolute',top:0,bottom:0,left:0,right:0}}>
         <StatusBar backgroundColor="blue" barStyle="light-content" />
         <View style={{width:SCREEN_WIDTH,height: 50, justifyContent:'center',backgroundColor:MAIN_COLOR}}>
           <Text style={{fontSize:20,alignSelf:'center',color:'white'}}>{'Target Number: ' + this.state.targetNumber}</Text>
         </View>
-        <View style={{flexDirection:'row',justifyContent:'space-around',marginVertical: 15}}>
+
+        <View style={{flex:1,flexDirection:'row',alignItems:'center',justifyContent:'space-around'}}>
+          <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Round: ' + this.state.round}</Text>
+          <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Level: ' + this.state.currentLevel}</Text>
+        </View>
+
+        <View style={{flexDirection:'row',justifyContent:'space-around'}}>
           {Array.from({length:3}, v => v).map( (value, index) => {
             var text = ['Reset', 'Clear', 'Show'][index];
             return (
@@ -167,17 +174,15 @@ var TestGame = React.createClass({
                       return;
                   }
                 }}>
-                <View style={styles.button}>
+                <View style={[styles.button,{flex:1}]}>
                   <Text style={{color:'white'}}>{text}</Text>
                 </View>
               </TouchableOpacity>
             )
           })}
         </View>
-        <View style={{flexDirection:'row',justifyContent:'space-around'}}>
-          <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Round: ' + this.state.round}</Text>
-          <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Level: ' + this.state.currentLevel}</Text>
-        </View>
+
+        <Text style={{fontSize:20,alignSelf:'center',margin:10}}>{'Target Number: ' + this.state.targetNumber}</Text>
         <View style={{width:SCREEN_WIDTH,flexWrap:'wrap',flexDirection:'row'}}>
           {Array.from({length:this.state.totalPieces},(k,v) => {return v;}).map( (v, index) => {
             // var highlightIndexes = this.state.isOver ? this.state.answerIndexes : this.state.userSelected;
@@ -211,15 +216,16 @@ var TestGame = React.createClass({
 
 const styles = StyleSheet.create({
   button:{
-    width: 80,
-    height: 80,
-    borderRadius: 20,
+    // width: 80,
+    // height: 40,
+    padding:15,
+    borderRadius: 5,
     backgroundColor: MAIN_COLOR,
     alignItems: 'center',
     justifyContent: 'center'
   },
   rect: {
-    borderColor: 'rgb(100,100,150)',
+    borderColor: 'rgb(120,100,150)',
     borderWidth: 1,
 
   },
