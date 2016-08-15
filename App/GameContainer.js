@@ -7,17 +7,42 @@ var {
   StyleSheet,
   Dimensions,
   StatusBar,
-  TouchableOpacity,
+  Platform,
   TouchableOpacity
 } = ReactNative;
 var Game = require('./Game');
+var TimerMixin = require('react-timer-mixin');
 var SCREEN_WIDTH = Dimensions.get('window').width;
 var SCREEN_HEIGHT = Dimensions.get('window').height;
 var MAIN_COLOR = 'rgb(73,185,251)';
+var MAX_TIME = 60 * 60 * 10; //one hour (1 : 100ms)
+var TimerText = React.createClass({
+  propTypes: {
+    duration:React.PropTypes.number.isRequired,
+  },
+
+  getInitialState:function() {
+    return {
+      duration: 0,
+    }
+  },
+
+  setNativeProps(props) {
+      this.setState(props);
+  },
+
+  render: function() {
+    return (
+      <Text style={{flex:1,textAlign:'center',fontSize:15,alignSelf:'center',margin:10}}>{'持续时间: ' + this.state.duration / 10 + 's'}</Text>
+    )
+  },
+});
+
 var TestGame = React.createClass({
+  mixins: [TimerMixin],
 
   statics:{
-    title: 'TestGame',
+    title: 'Numbers',
   },
 
   getInitialState: function() {
@@ -39,6 +64,28 @@ var TestGame = React.createClass({
 
   componentDidMount: function() {
     this.resetGame();
+    this.toggleTimer();
+  },
+
+  componentWillUnmount: function() {
+    this._timer && this.clearTimer(this._timer);
+    this._interval && this.clearInterval(this._interval);
+  },
+
+  toggleTimer: function() {
+    if (this._interval) {
+      this._interval && this.clearInterval(this._interval);
+      this._interval = undefined;
+    } else {
+      this._interval = this.setInterval(() => {
+        if (this.state.duration > MAX_TIME) {
+          this.state.duration = 0;
+        }
+        this.state.duration = this.state.duration + 1;
+        this.refs['timer'].setNativeProps({duration:this.state.duration})
+      },100);
+    }
+
   },
 
   resetGame: function() {
@@ -59,9 +106,6 @@ var TestGame = React.createClass({
       targetNumber,
       allPieceValue,
       answerIndexes,
-      userSelected: [],
-      totalValue: 0,
-      isOver: false,
     });
   },
 
@@ -78,7 +122,6 @@ var TestGame = React.createClass({
     this.state.userSelected = [];
     this.state.totalValue = 0;
     this.setState({isOver:false});
-    // this.setState({userSelected: [],totalValue:0});
   },
 
   showAnswer: function() {
@@ -99,6 +142,10 @@ var TestGame = React.createClass({
   },
 
   onButtonClick: function(index) {
+    if (!this._interval) {
+      return Alert.alert('警告','请开始游戏');
+    }
+
     if (this.state.isOver) {
       return;
     }
@@ -115,12 +162,13 @@ var TestGame = React.createClass({
       this.refs['button' + index].setNativeProps({style:{backgroundColor:MAIN_COLOR}});
       this.state.userSelected = userSelected;
     } else {
-      Alert.alert('Warning','you should select adjacent number');
+      Alert.alert('警告','之允许选择相邻的数字块');
+      return;
     }
 
     if (this.state.totalValue === this.state.targetNumber) {
 
-      Alert.alert('Message','Not bad, man!');
+      Alert.alert('提示','Not bad, man!');
       var round = this.state.round;
       var currentLevel = this.state.currentLevel;
       round += 1;
@@ -129,13 +177,13 @@ var TestGame = React.createClass({
         currentLevel += 1;
         if (currentLevel > 3) {
           //game finish
-          Alert.alert('Message','You Win!');
-          round = 1;
+          Alert.alert('提示','通关了!');
+          //reset all
           currentLevel = 1;
         }
       }
       this.setState({round,currentLevel});
-      setTimeout(() => {
+      this._timer = setTimeout(() => {
         this.clearGame();
         this.resetGame();
       }, 1000);
@@ -145,31 +193,37 @@ var TestGame = React.createClass({
   render: function() {
     return (
       <View style={{position:'absolute',top:0,bottom:0,left:0,right:0}}>
-        <StatusBar backgroundColor="blue" barStyle="light-content" />
-        <View style={{width:SCREEN_WIDTH,height: 50, justifyContent:'center',backgroundColor:MAIN_COLOR}}>
-          <Text style={{fontSize:20,alignSelf:'center',color:'white'}}>{'Target Number: ' + this.state.targetNumber}</Text>
+        <StatusBar backgroundColor={MAIN_COLOR} barStyle="light-content" />
+        {Platform.OS === 'android' ? null : <View style={{width:SCREEN_WIDTH,height:20,backgroundColor:MAIN_COLOR}}/>}
+        <View style={{width:SCREEN_WIDTH,height:44, justifyContent:'center',backgroundColor:MAIN_COLOR}}>
+          <Text style={{fontSize:20,alignSelf:'center',color:'white'}}>{'Numbers'}</Text>
         </View>
 
         <View style={{flex:1,flexDirection:'row',alignItems:'center',justifyContent:'space-around'}}>
-          <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Round: ' + this.state.round}</Text>
-          <Text style={{marginBottom:10,fontSize:20,alignSelf:'center'}}>{'Level: ' + this.state.currentLevel}</Text>
+          <Text style={{marginBottom:5,fontSize:20,alignSelf:'center'}}>{'关卡: ' + this.state.round}</Text>
+          <Text style={{marginBottom:5,fontSize:20,alignSelf:'center'}}>{'难度: ' + this.state.currentLevel}</Text>
         </View>
 
         <View style={{flexDirection:'row',justifyContent:'space-around'}}>
           {Array.from({length:3}, v => v).map( (value, index) => {
-            var text = ['Reset', 'Clear', 'Show'][index];
+            var text = ['重置', '提示','暂停/开始'][index];
             return (
               <TouchableOpacity
                 key={index + 'value'}
                 activeOpacity={0.7}
                 onPress={() => {
+                  if (!this._interval && index < 2) {
+                    return Alert.alert('警告','请开始游戏');
+                  }
                   switch (index) {
-                    case 0:
+                    case 9:
                       return this.resetGame();
-                    case 1:
+                    case 0:
                       return this.clearGame();
-                    case 2:
+                    case 1:
                       return this.showAnswer();
+                    case 2:
+                      return this.toggleTimer();
                     default:
                       return;
                   }
@@ -182,7 +236,10 @@ var TestGame = React.createClass({
           })}
         </View>
 
-        <Text style={{fontSize:20,alignSelf:'center',margin:10}}>{'Target Number: ' + this.state.targetNumber}</Text>
+        <View style={{flex:1,flexDirection:'row',alignItems:'center',justifyContent:'space-around'}}>
+          <Text style={{flex:1,textAlign:'center',fontSize:15,alignSelf:'center',margin:10}}>{'目标数字: ' + this.state.targetNumber}</Text>
+          <TimerText ref={'timer'} duration={this.state.duration}/>
+        </View>
         <View style={{width:SCREEN_WIDTH,flexWrap:'wrap',flexDirection:'row'}}>
           {Array.from({length:this.state.totalPieces},(k,v) => {return v;}).map( (v, index) => {
             // var highlightIndexes = this.state.isOver ? this.state.answerIndexes : this.state.userSelected;
