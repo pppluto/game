@@ -33,7 +33,7 @@ var TimerText = React.createClass({
 
   render: function() {
     return (
-      <Text style={{flex:1,textAlign:'center',fontSize:15,alignSelf:'center',margin:10}}>{'持续时间: ' + this.state.duration / 10 + 's'}</Text>
+      <Text style={{flex:1,textAlign:'left',fontSize:15,alignSelf:'center',margin:10}}>{this.state.duration / 10 + 's'}</Text>
     )
   },
 });
@@ -168,20 +168,33 @@ var TestGame = React.createClass({
 
     if (this.state.totalValue === this.state.targetNumber) {
 
-      Alert.alert('提示','Not bad, man!');
+      Alert.alert('提示','完成!');
       var round = this.state.round;
       var currentLevel = this.state.currentLevel;
       round += 1;
       if (round > 5) {
         round = 1;
         currentLevel += 1;
-        if (currentLevel > 3) {
-          //game finish
+        //TODO  bonus based level up! credit or dragon ball. record statistics per day
+        switch (currentLevel) {
+          case 2:
+          Alert.alert('提示','成功完成第一关');
+           break;
+          case 3:
+          Alert.alert('提示','成功完成第二关');
+            break;
+          case 4:
           Alert.alert('提示','通关了!');
+          this.state.duration = 0;
+          this.toggleTimer();
           //reset all
           currentLevel = 1;
+            break;
+          default:
+
         }
       }
+
       this.setState({round,currentLevel});
       this._timer = setTimeout(() => {
         this.clearGame();
@@ -205,24 +218,25 @@ var TestGame = React.createClass({
         </View>
 
         <View style={{flexDirection:'row',justifyContent:'space-around'}}>
-          {Array.from({length:3}, v => v).map( (value, index) => {
-            var text = ['重置', '提示','暂停/开始'][index];
+          {Array.from({length:4}, v => v).map( (value, index) => {
+            var text = ['重置', '清除', '提示','暂停/开始'][index];
             return (
               <TouchableOpacity
                 key={index + 'value'}
                 activeOpacity={0.7}
                 onPress={() => {
-                  if (!this._interval && index < 2) {
+                  if (!this._interval && index < 2 && index > 0) {
                     return Alert.alert('警告','请开始游戏');
                   }
                   switch (index) {
-                    case 9:
-                      return this.resetGame();
                     case 0:
-                      return this.clearGame();
+                      this.clearGame();
+                      return this.resetGame();
                     case 1:
-                      return this.showAnswer();
+                      return this.clearGame();
                     case 2:
+                      return this.showAnswer();
+                    case 3:
                       return this.toggleTimer();
                     default:
                       return;
@@ -238,7 +252,10 @@ var TestGame = React.createClass({
 
         <View style={{flex:1,flexDirection:'row',alignItems:'center',justifyContent:'space-around'}}>
           <Text style={{flex:1,textAlign:'center',fontSize:15,alignSelf:'center',margin:10}}>{'目标数字: ' + this.state.targetNumber}</Text>
-          <TimerText ref={'timer'} duration={this.state.duration}/>
+          <View style={{flex:1,flexDirection:'row',alignItems:'center',justifyContent:'space-around'}}>
+            <Text style={{flex:1,textAlign:'right',fontSize:15,alignSelf:'center',marginVertical:10}}>{'时间: '}</Text>
+            <TimerText ref={'timer'} duration={this.state.duration}/>
+          </View>
         </View>
         <View style={{width:SCREEN_WIDTH,flexWrap:'wrap',flexDirection:'row'}}>
           {Array.from({length:this.state.totalPieces},(k,v) => {return v;}).map( (v, index) => {
