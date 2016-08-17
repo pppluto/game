@@ -6,4 +6,4 @@
 
  import { AppRegistry } from 'react-native';
 
- AppRegistry.registerComponent('game', () => require('./App/GameContainer'));
+ AppRegistry.registerComponent('game', () => require('./App/StartPage'));

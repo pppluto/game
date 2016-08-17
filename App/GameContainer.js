@@ -12,6 +12,7 @@ var {
 } = ReactNative;
 var Game = require('./Game');
 var TimerMixin = require('react-timer-mixin');
+var Button = require('./Utils/Button');
 var SCREEN_WIDTH = Dimensions.get('window').width;
 var SCREEN_HEIGHT = Dimensions.get('window').height;
 var MAIN_COLOR = 'rgb(73,185,251)';
@@ -205,10 +206,15 @@ var TestGame = React.createClass({
 
   render: function() {
     return (
-      <View style={{position:'absolute',top:0,bottom:0,left:0,right:0}}>
+      <View style={{position:'absolute',top:0,bottom:0,left:0,right:0,backgroundColor:'white'}}>
         <StatusBar backgroundColor={MAIN_COLOR} barStyle="light-content" />
         {Platform.OS === 'android' ? null : <View style={{width:SCREEN_WIDTH,height:20,backgroundColor:MAIN_COLOR}}/>}
-        <View style={{width:SCREEN_WIDTH,height:44, justifyContent:'center',backgroundColor:MAIN_COLOR}}>
+        <View style={{flexDirection:'row',width:SCREEN_WIDTH,height:44, justifyContent:'center',backgroundColor:MAIN_COLOR}}>
+          <Button
+            title={'<'}
+            onPress={() => {
+              this.props.navigator.pop();
+            }}/>
           <Text style={{fontSize:20,alignSelf:'center',color:'white'}}>{'Numbers'}</Text>
         </View>
 
