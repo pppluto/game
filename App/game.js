@@ -69,12 +69,13 @@ function isNearBy(center,b,rowLength) {
 
 Game.prototype.isNearBy = isNearBy;
 
-function getAvailableIndexes(index, rowLength) {
+function getAvailableIndexes(index, rowLength, usedIndexesArray) {
   var allIndexes = [index - rowLength, index + rowLength, index - 1, index + 1];
   var availableIndexes = [];
+  var usedIndexes = usedIndexesArray || [];
   allIndexes.forEach( value => {
     if (value >= 0 && value < rowLength * rowLength) {
-      if (isNearBy(index, value,rowLength)) {
+      if (isNearBy(index, value,rowLength) && usedIndexes.indexOf(value) < 0) {
         availableIndexes.push(value);
       }
     }
@@ -88,16 +89,24 @@ Game.prototype.createAnswerIndexes = function(count){
 
   var initialPosition = Math.floor(Math.random() * this.totalPieces);
 
-
   var i = 0;
   var availableIndexes = getAvailableIndexes(initialPosition,rowLength);
   while (i < count) {
 
     if (indexesArray.indexOf(initialPosition) < 0) {
       indexesArray.push(initialPosition);
-      availableIndexes = getAvailableIndexes(initialPosition,rowLength);
+      availableIndexes = getAvailableIndexes(initialPosition,rowLength,indexesArray);
       ++i;
     }
+
+    //没有可用的index(四个角上)，则重新生成.
+    if (availableIndexes.length === 0 && i < count) {
+      i = 0;
+      indexesArray = [];
+      initialPosition = Math.floor(Math.random() * this.totalPieces);
+      continue;
+    }
+
     initialPosition = availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
   }
   return indexesArray;
