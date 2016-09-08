@@ -7,6 +7,12 @@ function Game(){
 
 module.exports = Game;
 
+/**
+ * [createAnswerSequence 生成参考解]
+ * @param  {[type]} a [目标数字]
+ * @param  {[type]} c [分成多少部分]
+ * @return {[type]}   [返回一组数字数字，相加为目标数字]
+ */
 Game.prototype.createAnswerSequence = function(a,c){
   var target = parseInt(a || 0, 10);
   var count = parseInt(c || 2, 10);
@@ -18,9 +24,10 @@ Game.prototype.createAnswerSequence = function(a,c){
   }
 
   var randomPositions = [], i = 0;
+  var offset = Math.floor(target / (c + 1));
   while (i < count) {
-    var tmp = Math.floor(Math.random() * target);
-    if (randomPositions.indexOf(tmp) < 0 && tmp !== 0) {
+    var tmp = Math.floor(Math.random() * offset) + i * offset;
+    if (randomPositions.indexOf(tmp) < 0 && tmp !== 0 && Math.abs(tmp % offset - offset) < 4) {
       randomPositions.push(tmp);
       ++i;
     }
@@ -33,13 +40,21 @@ Game.prototype.createAnswerSequence = function(a,c){
   },0);
   targetAnswers.push(target - sortRandomPositions[sortRandomPositions.length - 1]);
   return targetAnswers;
-}
+};
 
-Game.prototype.createAllPieceValue = function(target,totalPieces) {
+/**
+ * [createAllPieceValue 随机生成矩阵数字]
+ * @param  {[type]} target [目标数字]
+ * @param  {[type]} count  [矩阵块数]
+ * @return {[type]}        [返回随机数字数组]
+ */
+Game.prototype.createAllPieceValue = function(target,count) {
 
   var i = 0, arr = [];
   while (i < this.totalPieces) {
-    var tmp = Math.floor(Math.random() * 20);
+    //target / (count + 1): 在目标数字的小部分中随机值。
+    var base = Math.floor(target / (count + 1) + 5);
+    var tmp = Math.floor(Math.random() * base);
     if (tmp === target) {
       continue;
     }
@@ -47,8 +62,15 @@ Game.prototype.createAllPieceValue = function(target,totalPieces) {
     ++i;
   }
   return arr;
-}
+};
 
+/**
+ * [isNearBy 是否相邻]
+ * @param  {[type]}  center    [中心位置]
+ * @param  {[type]}  b         [给定位置]
+ * @param  {[type]}  rowLength [矩阵长度]
+ * @return {Boolean}           [是否相邻]
+ */
 function isNearBy(center,b,rowLength) {
 
   var minus = Math.abs(center - b);
@@ -69,6 +91,13 @@ function isNearBy(center,b,rowLength) {
 
 Game.prototype.isNearBy = isNearBy;
 
+/**
+ * [getAvailableIndexes 获得可用位置]
+ * @param  {[type]} index 所在位置
+ * @param  {[type]} rowLength 矩阵长度
+ * @param  {[type]} usedIndexes 已占位置
+ * @return {[type]} 返回可用位置
+ */
 function getAvailableIndexes(index, rowLength, usedIndexesArray) {
   var allIndexes = [index - rowLength, index + rowLength, index - 1, index + 1];
   var availableIndexes = [];
@@ -83,11 +112,17 @@ function getAvailableIndexes(index, rowLength, usedIndexesArray) {
   return availableIndexes;
 }
 
+/**
+ * [createAnswerIndexes 生成参考解位置]
+ * @param  {[type]} count [多少个位置]
+ * @return {[type]}       [返回一个相邻的位置数组]
+ */
 Game.prototype.createAnswerIndexes = function(count){
   var indexesArray = [];
   var rowLength = Math.sqrt(this.totalPieces);
 
   var initialPosition = Math.floor(Math.random() * this.totalPieces);
+
 
   var i = 0;
   var availableIndexes = getAvailableIndexes(initialPosition,rowLength);
@@ -99,8 +134,9 @@ Game.prototype.createAnswerIndexes = function(count){
       ++i;
     }
 
-    //没有可用的index(四个角上)，则重新生成.
+    //没有可用的index，则重新生成.
     if (availableIndexes.length === 0 && i < count) {
+      console.log('should recreate answerIndexes, old:',i,indexesArray);
       i = 0;
       indexesArray = [];
       initialPosition = Math.floor(Math.random() * this.totalPieces);
